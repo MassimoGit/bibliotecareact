@@ -1,63 +1,73 @@
 import { useState } from 'react';
 
-// Task 1: SearchBar è ora un controlled component (Task 2)
-// Riceve value e onSearch come props
-const SearchBar = ({ value, onSearch }) => {
-  const handleSearch = (event) => {
-    onSearch(event.target.value);
-  };
+// SearchBar: controlled component — riceve value, onSearch
+const SearchBar = ({ value, onSearch }) => (
+  <div>
+    <label htmlFor="search">Cerca un libro: </label>
+    <input
+      id="search"
+      type="text"
+      placeholder="Inserisci titolo o autore..."
+      value={value}
+      onChange={(e) => onSearch(e.target.value)}
+    />
+  </div>
+);
 
-  return (
-    <div>
-      <label htmlFor="search">Cerca un libro: </label>
+// Task 4: checkbox "Solo non letti"
+const UnreadFilter = ({ checked, onChange }) => (
+  <div>
+    <label>
       <input
-        id="search"
-        type="text"
-        placeholder="Inserisci titolo o autore..."
-        value={value}
-        onChange={handleSearch}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
       />
-    </div>
-  );
-};
+      {' '}Mostra solo libri da leggere
+    </label>
+  </div>
+);
 
-// Task 1: BookItem estratto da BookList — riceve un singolo book tramite props
-const BookItem = ({ book }) => {
-  const handleShowDetails = () => {
-    console.log("Mostra dettagli cliccato! Libro:", book.title);
-  };
+// Task 5: BookItem riceve anche onMarkAsRead
+const BookItem = ({ book, onMarkAsRead }) => (
+  <li>
+    <h3>{book.title}</h3>
+    <p>Autore: {book.author}</p>
+    <p>Pagine: {book.pages}</p>
+    <p>Genere: {book.genre}</p>
+    {/* Task 5: indicatore stato lettura */}
+    <p>{book.read ? '✓ Letto' : '○ Da leggere'}</p>
+    {/* Task 5: button visibile solo se non ancora letto */}
+    {!book.read && (
+      <button onClick={() => onMarkAsRead(book.id)}>Segna come Letto</button>
+    )}
+    <button onClick={() => console.log("Mostra dettagli cliccato! Libro:", book.title)}>
+      Mostra Dettagli
+    </button>
+  </li>
+);
 
-  return (
-    <li>
-      <h3>{book.title}</h3>
-      <p>Autore: {book.author}</p>
-      <p>Pagine: {book.pages}</p>
-      <p>Genere: {book.genre}</p>
-      <button onClick={handleShowDetails}>Mostra Dettagli</button>
-    </li>
-  );
-};
-
-// Task 1: BookList riceve books tramite props (non più variabile globale)
-const BookList = ({ books }) => (
+// BookList: concise body — passa onMarkAsRead in giù a BookItem
+const BookList = ({ books, onMarkAsRead }) => (
   <ul>
     {books.map((book) => (
-      <BookItem key={book.id} book={book} />
+      <BookItem key={book.id} book={book} onMarkAsRead={onMarkAsRead} />
     ))}
   </ul>
 );
 
-const ReviewForm = () => {
-  const handleTitleChange = (event) => {
-    console.log("Titolo:", event.target.value);
-  };
-
-  const handleReviewChange = (event) => {
-    console.log("Recensione:", event.target.value);
-  };
+// Task 6: ReviewForm con state locale per i campi (controlled)
+// Riceve onAddReview dal parent
+const ReviewForm = ({ onAddReview }) => {
+  const [bookTitle, setBookTitle] = useState('');
+  const [reviewText, setReviewText] = useState('');
 
   const handleSubmit = () => {
-    console.log("Recensione inviata!");
+    if (bookTitle.trim() === '' || reviewText.trim() === '') return;
+    onAddReview({ bookTitle, reviewText });
+    // reset campi dopo submit
+    setBookTitle('');
+    setReviewText('');
   };
 
   return (
@@ -68,7 +78,8 @@ const ReviewForm = () => {
         id="bookTitle"
         type="text"
         placeholder="Es. 1984"
-        onChange={handleTitleChange}
+        value={bookTitle}
+        onChange={(e) => setBookTitle(e.target.value)}
       />
       <br />
       <label htmlFor="review">La tua recensione:</label>
@@ -76,7 +87,8 @@ const ReviewForm = () => {
         id="review"
         placeholder="Scrivi qui la tua recensione..."
         rows="4"
-        onChange={handleReviewChange}
+        value={reviewText}
+        onChange={(e) => setReviewText(e.target.value)}
       ></textarea>
       <br />
       <button onClick={handleSubmit}>Pubblica Recensione</button>
@@ -84,32 +96,76 @@ const ReviewForm = () => {
   );
 };
 
-// Task 1: books ora è dentro App, non più variabile globale
-const App = () => {
-  const books = [
-    { id: 1, title: "1984", author: "George Orwell", pages: 328, genre: "Distopia" },
-    { id: 2, title: "Il Signore degli Anelli", author: "J.R.R. Tolkien", pages: 1178, genre: "Fantasy" },
-    { id: 3, title: "Il Piccolo Principe", author: "Antoine de Saint-Exupéry", pages: 96, genre: "Favola" },
-    { id: 4, title: "Fondazione", author: "Isaac Asimov", pages: 255, genre: "Fantascienza" },
-    { id: 5, title: "L'Alchimista", author: "Paulo Coelho", pages: 208, genre: "Romanzo" },
-  ];
+// Task 6: lista recensioni salvate
+const ReviewList = ({ reviews }) => {
+  if (reviews.length === 0) return null;
 
-  // Task 2: state per il termine di ricerca
+  return (
+    <div>
+      <h3>Recensioni pubblicate</h3>
+      <ul>
+        {reviews.map((review) => (
+          <li key={review.id}>
+            <strong>{review.bookTitle}</strong>
+            <p>{review.reviewText}</p>
+            <small>{review.timestamp}</small>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const App = () => {
+  // Task 5: books come state — aggiunta proprietà read
+  const [books, setBooks] = useState([
+    { id: 1, title: "1984", author: "George Orwell", pages: 328, genre: "Distopia", read: true },
+    { id: 2, title: "Il Signore degli Anelli", author: "J.R.R. Tolkien", pages: 1178, genre: "Fantasy", read: false },
+    { id: 3, title: "Il Piccolo Principe", author: "Antoine de Saint-Exupéry", pages: 96, genre: "Favola", read: true },
+    { id: 4, title: "Fondazione", author: "Isaac Asimov", pages: 255, genre: "Fantascienza", read: false },
+    { id: 5, title: "L'Alchimista", author: "Paulo Coelho", pages: 208, genre: "Romanzo", read: false },
+  ]);
+
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Task 2: filtraggio case-insensitive su titolo e autore
-  const filteredBooks = books.filter((book) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      book.title.toLowerCase().includes(term) ||
-      book.author.toLowerCase().includes(term)
-    );
-  });
+  // Task 4: state per il filtro "solo non letti"
+  const [showOnlyUnread, setShowOnlyUnread] = useState(false);
 
-  // Task 3: messaggio risultati dinamico
+  // Task 6: state per le recensioni
+  const [reviews, setReviews] = useState([]);
+
+  // Task 5: cambia read di un libro tramite .map()
+  const handleMarkAsRead = (id) => {
+    setBooks(books.map((book) =>
+      book.id === id ? { ...book, read: true } : book
+    ));
+  };
+
+  // Task 6: aggiunge una recensione all'array con timestamp
+  const handleAddReview = ({ bookTitle, reviewText }) => {
+    const newReview = {
+      id: Date.now(),
+      bookTitle,
+      reviewText,
+      timestamp: new Date().toLocaleString('it-IT'),
+    };
+    setReviews([...reviews, newReview]);
+  };
+
+  // Task 4: filtraggio — prima per searchTerm, poi per read
+  const filteredBooks = books
+    .filter((book) => {
+      const term = searchTerm.toLowerCase();
+      return (
+        book.title.toLowerCase().includes(term) ||
+        book.author.toLowerCase().includes(term)
+      );
+    })
+    .filter((book) => (showOnlyUnread ? !book.read : true));
+
   const getResultMessage = () => {
     if (filteredBooks.length === 0) return "Nessun libro trovato";
-    if (searchTerm === '') return `Mostrando tutti i ${books.length} libri`;
+    if (searchTerm === '' && !showOnlyUnread) return `Mostrando tutti i ${books.length} libri`;
     return `Trovati ${filteredBooks.length} libri`;
   };
 
@@ -117,20 +173,22 @@ const App = () => {
     <div>
       <h1>La Mia Biblioteca Personale</h1>
 
-      {/* Task 2: SearchBar controlled — riceve value e callback onSearch */}
       <SearchBar value={searchTerm} onSearch={setSearchTerm} />
+      {/* Task 4: checkbox filtro non letti */}
+      <UnreadFilter checked={showOnlyUnread} onChange={setShowOnlyUnread} />
 
       <hr />
 
       <h2>I Miei Libri</h2>
-      {/* Task 3: contatore risultati */}
       <p>{getResultMessage()}</p>
-
-      {/* Task 1 + 2: BookList riceve i libri filtrati */}
-      <BookList books={filteredBooks} />
+      {/* Task 5: passa onMarkAsRead giù a BookList */}
+      <BookList books={filteredBooks} onMarkAsRead={handleMarkAsRead} />
 
       <hr />
-      <ReviewForm />
+
+      {/* Task 6: ReviewForm riceve callback, ReviewList riceve l'array */}
+      <ReviewForm onAddReview={handleAddReview} />
+      <ReviewList reviews={reviews} />
     </div>
   );
 };
