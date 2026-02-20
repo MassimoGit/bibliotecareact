@@ -118,6 +118,7 @@ const ReviewList = ({ reviews }) => {
 
 const App = () => {
   // Task 5: books come state — aggiunta proprietà read
+  // Oltre lo state abbiamo read true / false per ogni libro che indica se letto o meno
   const [books, setBooks] = useState([
     { id: 1, title: "1984", author: "George Orwell", pages: 328, genre: "Distopia", read: true },
     { id: 2, title: "Il Signore degli Anelli", author: "J.R.R. Tolkien", pages: 1178, genre: "Fantasy", read: false },
