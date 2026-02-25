@@ -1,4 +1,4 @@
-// SearchBar: controlled component — riceve value, onSearch
+// SearchBar E04: controlled component — riceve value, onSearch
 const SearchBar = ({ value, onSearch }) => (
   <div>
     <label htmlFor="search">Cerca un libro: </label>

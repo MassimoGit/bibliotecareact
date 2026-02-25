@@ -1,6 +1,6 @@
 import BookItem from "./BookItem";
 
-// BookList: renderizza la lista dei libri
+// BookList E04: renderizza la lista dei libri
 const BookList = ({ books, onMarkAsRead }) => (
   <ul>
     {books.map((book) => (

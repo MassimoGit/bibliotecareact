@@ -1,4 +1,4 @@
-// BookItem: mostra dettagli di un singolo libro
+// BookItem E04: mostra dettagli di un singolo libro
 const BookItem = ({ book, onMarkAsRead }) => (
   <li>
     <h3>{book.title}</h3>

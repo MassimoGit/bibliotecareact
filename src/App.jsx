@@ -7,10 +7,12 @@ import ReviewList from "./components/ReviewList";
 import { books as initialBooks } from "./data/books";
 
 const App = () => {
-  // Task 5 (L04): state per le recensioni — inizializza da localStorage
+
+  // Task 5 (04): state per le recensioni — inizializza da localStorage
   const [reviews, setReviews] = useState(
     JSON.parse(localStorage.getItem("bibliotecaReviews") || "[]"),
   );
+
   // nextId parte dal massimo id esistente + 1
   const [nextId, setNextId] = useState(() => {
     const saved = JSON.parse(
@@ -34,7 +36,7 @@ const App = () => {
   // Books come state
   const [books, setBooks] = useState(initialBooks);
 
-  // Task 3 (L04): searchTerm — inizializza da localStorage
+  // Task (L04): searchTerm — inizializza da localStorage
   const [searchTerm, setSearchTerm] = useState(
     localStorage.getItem("bibliotecaSearch") || "",
   );

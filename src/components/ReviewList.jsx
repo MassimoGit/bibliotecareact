@@ -1,4 +1,4 @@
-// ReviewList: mostra le recensioni pubblicate
+// ReviewList E04: mostra le recensioni pubblicate
 const ReviewList = ({ reviews }) => {
   if (reviews.length === 0) return null;
 
