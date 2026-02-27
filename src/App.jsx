@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import SearchBar from "./components/SearchBar";
+import { useState } from "react";
+import useStorageState from "./hooks/useStorageState";
+import InputWithLabel from "./components/InputWithLabel";
 import UnreadFilter from "./components/UnreadFilter";
 import BookList from "./components/BookList";
 import ReviewForm from "./components/ReviewForm";
@@ -8,17 +9,24 @@ import { books as initialBooks } from "./data/books";
 
 const App = () => {
 
-  // Task 5 (04): state per le recensioni — inizializza da localStorage
-  const [reviews, setReviews] = useState(
-    JSON.parse(localStorage.getItem("bibliotecaReviews") || "[]"),
-  );
+  // Task 2: searchTerm con useStorageState
+  const [searchTerm, setSearchTerm] = useStorageState('bibliotecaSearch', '');
+
+  // Task 8: filtro autore con useStorageState
+  const [authorFilter, setAuthorFilter] = useStorageState('bibliotecaAuthor', '');
+
+  // Task 3: showOnlyUnread con useStorageState
+  const [showOnlyUnread, setShowOnlyUnread] = useStorageState('bibliotecaShowUnread', false);
+
+  // Task 4: reviews con useStorageState
+  const [reviews, setReviews] = useStorageState('bibliotecaReviews', []);
 
   // nextId parte dal massimo id esistente + 1
   const [nextId, setNextId] = useState(() => {
     const saved = JSON.parse(
       localStorage.getItem("bibliotecaReviews") || "[]",
     );
-    return saved.length > 0 ? Math.max(...saved.map((r) => r.id)) + 1 : 1;
+    return saved.length > 0 ? saved.reduce((max, item) => Math.max(max, item.id), saved[0].id) + 1 : 1;
   });
 
   // Aggiunge una recensione all'array con timestamp
@@ -36,40 +44,14 @@ const App = () => {
   // Books come state
   const [books, setBooks] = useState(initialBooks);
 
-  // Task (L04): searchTerm — inizializza da localStorage
-  const [searchTerm, setSearchTerm] = useState(
-    localStorage.getItem("bibliotecaSearch") || "",
-  );
-
-  // Task 4 (L04): showOnlyUnread — inizializza da localStorage
-  const [showOnlyUnread, setShowOnlyUnread] = useState(
-    JSON.parse(localStorage.getItem("bibliotecaShowUnread") || "false"),
-  );
-
-  // Task 3 (L04): salva searchTerm nel localStorage quando cambia
-  useEffect(() => {
-    localStorage.setItem("bibliotecaSearch", searchTerm);
-  }, [searchTerm]);
-
-  // Task 4 (L04): salva showOnlyUnread nel localStorage quando cambia
-  useEffect(() => {
-    localStorage.setItem(
-      "bibliotecaShowUnread",
-      JSON.stringify(showOnlyUnread),
-    );
-  }, [showOnlyUnread]);
-
-  // Task 5 (L04): salva reviews nel localStorage quando cambiano
-  useEffect(() => {
-    localStorage.setItem("bibliotecaReviews", JSON.stringify(reviews));
-  }, [reviews]);
-
-  // Task 6 extra: cancella cronologia — rimuove dati da localStorage e resetta state
+  // Cancella cronologia — rimuove dati da localStorage e resetta state
   const handleClearHistory = () => {
     localStorage.removeItem("bibliotecaSearch");
+    localStorage.removeItem("bibliotecaAuthor");
     localStorage.removeItem("bibliotecaShowUnread");
     localStorage.removeItem("bibliotecaReviews");
     setSearchTerm("");
+    setAuthorFilter("");
     setShowOnlyUnread(false);
     setReviews([]);
     setNextId(1);
@@ -82,45 +64,48 @@ const App = () => {
     );
   };
 
-  // Filtraggio — prima per searchTerm, poi per read
+  // Filtraggio — per titolo, autore e read
   const filteredBooks = books
-    .filter((book) => {
-      const term = searchTerm.toLowerCase();
-      return (
-        book.title.toLowerCase().includes(term) ||
-        book.author.toLowerCase().includes(term)
-      );
-    })
+    .filter((book) => book.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((book) => book.author.toLowerCase().includes(authorFilter.toLowerCase()))
     .filter((book) => (showOnlyUnread ? !book.read : true));
 
   const getResultMessage = () => {
     if (filteredBooks.length === 0) return "Nessun libro trovato";
-    if (searchTerm === "" && !showOnlyUnread)
+    if (searchTerm === "" && authorFilter === "" && !showOnlyUnread)
       return `Mostrando tutti i ${books.length} libri`;
     return `Trovati ${filteredBooks.length} libri`;
   };
 
   return (
-    <div>
-      <h1>La Mia Biblioteca Personale</h1>
+    <div className="card">
+      <div className="card-header">
+          <h1>La Mia Biblioteca Personale</h1>
+          <InputWithLabel id="search" value={searchTerm} onInputChange={setSearchTerm}>
+            <strong>Cerca per titolo:</strong>
+          </InputWithLabel>
+          <InputWithLabel id="author" value={authorFilter} onInputChange={setAuthorFilter}>
+            <strong>Filtra per autore:</strong>
+          </InputWithLabel>
+          <UnreadFilter checked={showOnlyUnread} onChange={setShowOnlyUnread} />
+      </div>
 
-      <SearchBar value={searchTerm} onSearch={setSearchTerm} />
-      <UnreadFilter checked={showOnlyUnread} onChange={setShowOnlyUnread} />
+      <div className="card-body">
+          <h2>I Miei Libri</h2>
+          <p>{getResultMessage()}</p>
+          <BookList books={filteredBooks} onMarkAsRead={handleMarkAsRead} />
 
-      <hr />
+      </div>
 
-      <h2>I Miei Libri</h2>
-      <p>{getResultMessage()}</p>
-      <BookList books={filteredBooks} onMarkAsRead={handleMarkAsRead} />
+      <div>
+          <ReviewForm onAddReview={handleAddReview} />
+          <ReviewList reviews={reviews} />
+      </div>
 
-      <hr />
+        <footer className="footer mt-auto py-3 bg-light">
+            <button className="btn-danger btn" onClick={handleClearHistory}>Cancella Cronologia</button>
+        </footer>
 
-      <ReviewForm onAddReview={handleAddReview} />
-      <ReviewList reviews={reviews} />
-
-      <hr />
-
-      <button onClick={handleClearHistory}>Cancella Cronologia</button>
     </div>
   );
 };

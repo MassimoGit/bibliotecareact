@@ -1,6 +1,6 @@
 // SearchBar E04: controlled component — riceve value, onSearch
 const SearchBar = ({ value, onSearch }) => (
-  <div>
+  <>
     <label htmlFor="search">Cerca un libro: </label>
     <input
       id="search"
@@ -9,7 +9,7 @@ const SearchBar = ({ value, onSearch }) => (
       value={value}
       onChange={(e) => onSearch(e.target.value)}
     />
-  </div>
+  </>
 );
 
 export default SearchBar;

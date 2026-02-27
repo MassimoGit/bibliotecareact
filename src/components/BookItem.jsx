@@ -1,6 +1,6 @@
 // BookItem E04: mostra dettagli di un singolo libro
 const BookItem = ({ book, onMarkAsRead }) => (
-  <li>
+  <li className="list-group-item">
     <h3>{book.title}</h3>
     <p>Autore: {book.author}</p>
     <p>Pagine: {book.pages}</p>

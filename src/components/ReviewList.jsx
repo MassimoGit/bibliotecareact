@@ -3,7 +3,7 @@ const ReviewList = ({ reviews }) => {
   if (reviews.length === 0) return null;
 
   return (
-    <div>
+    <>
       <h3>Recensioni pubblicate</h3>
       <ul>
         {reviews.map((review) => (
@@ -14,7 +14,7 @@ const ReviewList = ({ reviews }) => {
           </li>
         ))}
       </ul>
-    </div>
+    </>
   );
 };
 

@@ -13,7 +13,7 @@ const ReviewForm = ({ onAddReview }) => {
   };
 
   return (
-    <div>
+    <>
       <h2>Aggiungi una Recensione</h2>
       <label htmlFor="bookTitle">Titolo del libro:</label>
       <input
@@ -34,7 +34,7 @@ const ReviewForm = ({ onAddReview }) => {
       ></textarea>
       <br />
       <button onClick={handleSubmit}>Pubblica Recensione</button>
-    </div>
+    </>
   );
 };
 

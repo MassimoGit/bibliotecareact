@@ -1,16 +1,183 @@
-# React + Vite
+# La Mia Biblioteca Personale
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+App React per gestire una libreria personale con ricerca, filtri e recensioni.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## E04 — Refactoring e Persistenza
 
-## React Compiler
+### Parte A: Refactoring Props
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+#### Props Destructuring (tutti i componenti)
 
-## Expanding the ESLint configuration
+Prima di E04, ogni componente riceveva `props` come oggetto e accedeva ai valori con `props.qualcosa`:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```jsx
+// PRIMA
+const SearchBar = (props) => (
+  <input value={props.value} onChange={(e) => props.onSearch(e.target.value)} />
+);
+```
+
+Dopo E04, le props vengono **estratte direttamente nella firma della funzione**:
+
+```jsx
+// DOPO
+const SearchBar = ({ value, onSearch }) => (
+  <input value={value} onChange={(e) => onSearch(e.target.value)} />
+);
+```
+
+Vantaggi:
+- Nessun `props.` nel corpo del componente
+- Si vede subito quali props il componente si aspetta
+- Codice più corto e leggibile
+
+Componenti modificati: `SearchBar`, `UnreadFilter`, `BookItem`, `BookList`, `ReviewForm`, `ReviewList`.
+
+---
+
+### Parte B: Persistenza con localStorage
+
+#### Concetto chiave: perché useEffect?
+
+Lo state React è **in memoria**: se ricarichi la pagina, tutto si azzera.
+`localStorage` è **persistente**: sopravvive al ricaricamento.
+
+La strategia è sempre la stessa in due passi:
+
+1. **Al mount** — leggere dal localStorage per inizializzare lo state
+2. **Ad ogni cambiamento** — salvare nel localStorage con `useEffect`
+
+```jsx
+// Inizializzazione: leggi dal localStorage (valore iniziale dello useState)
+const [searchTerm, setSearchTerm] = useState(
+  localStorage.getItem("bibliotecaSearch") || ""
+);
+
+// Salvataggio: scrivi nel localStorage ogni volta che il valore cambia
+useEffect(() => {
+  localStorage.setItem("bibliotecaSearch", searchTerm);
+}, [searchTerm]);
+```
+
+Il `dependency array` `[searchTerm]` dice a React: *"esegui questo effect solo quando searchTerm cambia"*.
+
+#### Task 3 — searchTerm (stringa)
+
+Le stringhe si salvano direttamente, senza JSON:
+
+```jsx
+// salvataggio
+localStorage.setItem("bibliotecaSearch", searchTerm);
+
+// lettura
+localStorage.getItem("bibliotecaSearch") || ""
+```
+
+Il `|| ""` gestisce il caso in cui `getItem` ritorna `null` (localStorage vuoto).
+
+#### Task 4 — showOnlyUnread (boolean)
+
+`localStorage` salva solo stringhe. I boolean richiedono la conversione:
+
+```jsx
+// salvataggio: boolean → stringa JSON ("true" / "false")
+localStorage.setItem("bibliotecaShowUnread", JSON.stringify(showOnlyUnread));
+
+// lettura: stringa JSON → boolean
+JSON.parse(localStorage.getItem("bibliotecaShowUnread") || "false")
+```
+
+Senza `JSON.parse`, `localStorage.getItem()` restituirebbe la stringa `"false"`, che in JavaScript è **truthy** — il checkbox sarebbe sempre attivo!
+
+#### Task 5 — reviews (array di oggetti)
+
+Gli array richiedono anch'essi la conversione JSON:
+
+```jsx
+// salvataggio: array → stringa JSON
+localStorage.setItem("bibliotecaReviews", JSON.stringify(reviews));
+
+// lettura: stringa JSON → array (|| "[]" come fallback se localStorage è vuoto)
+JSON.parse(localStorage.getItem("bibliotecaReviews") || "[]")
+```
+
+Il `nextId` viene calcolato dal massimo `id` presente nelle recensioni salvate, così non si creano duplicati dopo un ricaricamento:
+
+```jsx
+const [nextId, setNextId] = useState(() => {
+  const saved = JSON.parse(localStorage.getItem("bibliotecaReviews") || "[]");
+  return saved.length > 0 ? Math.max(...saved.map((r) => r.id)) + 1 : 1;
+});
+```
+
+#### Task 6 (Extra) — Cancella Cronologia
+
+Un button che rimuove tutte le chiavi dal localStorage e resetta gli state ai valori di default:
+
+```jsx
+const handleClearHistory = () => {
+  localStorage.removeItem("bibliotecaSearch");
+  localStorage.removeItem("bibliotecaShowUnread");
+  localStorage.removeItem("bibliotecaReviews");
+  setSearchTerm("");
+  setShowOnlyUnread(false);
+  setReviews([]);
+  setNextId(1);
+};
+```
+
+---
+
+### Parte C: Organizzazione File
+
+#### Struttura prima di E04
+
+Tutto il codice stava in un unico `App.jsx` (~240 righe).
+
+#### Struttura dopo E04
+
+```
+src/
+├── App.jsx                  (~130 righe — solo logica e stato)
+├── data/
+│   └── books.js             (dati statici dei libri)
+└── components/
+    ├── SearchBar.jsx
+    ├── UnreadFilter.jsx
+    ├── BookItem.jsx
+    ├── BookList.jsx          (importa BookItem con path relativo ./BookItem)
+    ├── ReviewForm.jsx
+    └── ReviewList.jsx
+```
+
+Ogni componente ha il proprio file con `export default`. Le importazioni seguono la convenzione:
+
+```jsx
+// In App.jsx — i componenti sono un livello sotto
+import BookList from "./components/BookList";
+
+// In BookList.jsx — BookItem è allo stesso livello
+import BookItem from "./BookItem";
+
+// In App.jsx — i dati sono in src/data/
+import { books as initialBooks } from "./data/books";
+```
+
+Il file `books.js` usa `export const` (named export) invece di `export default` perché è un dato, non un componente:
+
+```js
+// src/data/books.js
+export const books = [ ... ];
+```
+
+---
+
+## Chiavi localStorage utilizzate
+
+| Chiave | Tipo | Contenuto |
+|---|---|---|
+| `bibliotecaSearch` | stringa | termine di ricerca corrente |
+| `bibliotecaShowUnread` | stringa JSON | `"true"` / `"false"` |
+| `bibliotecaReviews` | stringa JSON | array delle recensioni |
