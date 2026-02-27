@@ -78,34 +78,39 @@ const App = () => {
   };
 
   return (
-    <div className="card">
-      <div className="card-header">
-          <h1>La Mia Biblioteca Personale</h1>
-          <InputWithLabel id="search" value={searchTerm} onInputChange={setSearchTerm}>
-            <strong>Cerca per titolo:</strong>
-          </InputWithLabel>
-          <InputWithLabel id="author" value={authorFilter} onInputChange={setAuthorFilter}>
-            <strong>Filtra per autore:</strong>
-          </InputWithLabel>
-          <UnreadFilter checked={showOnlyUnread} onChange={setShowOnlyUnread} />
+    <div className="card shadow">
+      <div className="card-header bg-primary text-white">
+        <h1 className="h3 mb-0">La Mia Biblioteca Personale</h1>
       </div>
 
       <div className="card-body">
-          <h2>I Miei Libri</h2>
-          <p>{getResultMessage()}</p>
-          <BookList books={filteredBooks} onMarkAsRead={handleMarkAsRead} />
+        <div className="row">
+          <div className="col-md-6">
+            <InputWithLabel id="search" value={searchTerm} onInputChange={setSearchTerm}>
+              <strong><i className="bi bi-search me-1"></i>Cerca per titolo:</strong>
+            </InputWithLabel>
+          </div>
+          <div className="col-md-6">
+            <InputWithLabel id="author" value={authorFilter} onInputChange={setAuthorFilter}>
+              <strong><i className="bi bi-person me-1"></i>Filtra per autore:</strong>
+            </InputWithLabel>
+          </div>
+        </div>
+        <UnreadFilter checked={showOnlyUnread} onChange={setShowOnlyUnread} />
 
+        <h4 className="mb-3">I Miei Libri</h4>
+        <p className="text-muted">{getResultMessage()}</p>
+        <BookList books={filteredBooks} onMarkAsRead={handleMarkAsRead} />
       </div>
 
-      <div>
-          <ReviewForm onAddReview={handleAddReview} />
-          <ReviewList reviews={reviews} />
+      <div className="card-body border-top">
+        <ReviewForm onAddReview={handleAddReview} />
+        <ReviewList reviews={reviews} />
       </div>
 
-        <footer className="footer mt-auto py-3 bg-light">
-            <button className="btn-danger btn" onClick={handleClearHistory}>Cancella Cronologia</button>
-        </footer>
-
+      <div className="card-footer text-center">
+        <button className="btn btn-danger" onClick={handleClearHistory}><i className="bi bi-trash me-1"></i>Cancella Cronologia</button>
+      </div>
     </div>
   );
 };

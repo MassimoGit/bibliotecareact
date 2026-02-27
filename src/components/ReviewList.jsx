@@ -4,13 +4,13 @@ const ReviewList = ({ reviews }) => {
 
   return (
     <>
-      <h3>Recensioni pubblicate</h3>
-      <ul>
+      <h4 className="mt-4 mb-3">Recensioni pubblicate</h4>
+      <ul className="list-group">
         {reviews.map((review) => (
-          <li key={review.id}>
+          <li key={review.id} className="list-group-item">
             <strong>{review.bookTitle}</strong>
-            <p>{review.reviewText}</p>
-            <small>{review.timestamp}</small>
+            <p className="mb-1">{review.reviewText}</p>
+            <small className="text-muted">{review.timestamp}</small>
           </li>
         ))}
       </ul>
