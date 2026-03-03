@@ -7,6 +7,7 @@ const useStorageState = (key, initialState, options = {}) => {
     const stored = localStorage.getItem(key);
     if (stored === null) return initialState;
 
+
     try {
       const parsed = JSON.parse(stored);
 
@@ -27,11 +28,11 @@ const useStorageState = (key, initialState, options = {}) => {
   });
 
   useEffect(() => {
-    if (expiresIn) {
+    /*if (expiresIn) {
       localStorage.setItem(key, JSON.stringify({ value, timestamp: Date.now() }));
-    } else {
+    } else {*/
       localStorage.setItem(key, JSON.stringify(value));
-    }
+    // }
   }, [key, value, expiresIn]);
 
   return [value, setValue];

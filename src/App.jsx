@@ -5,6 +5,7 @@ import UnreadFilter from "./components/UnreadFilter";
 import BookList from "./components/BookList";
 import ReviewForm from "./components/ReviewForm";
 import ReviewList from "./components/ReviewList";
+import Notification from "./components/Notification";
 import { books as initialBooks } from "./data/books";
 
 const App = () => {
@@ -43,6 +44,27 @@ const App = () => {
 
   // Books come state
   const [books, setBooks] = useState(initialBooks);
+
+  // State per la notifica — null quando non c'è nessuna notifica
+  const [notification, setNotification] = useState(null);
+
+  // Rimuove un libro dall'array usando .filter()
+  const handleRemoveBook = (bookId) => {
+    // Salva il titolo prima di filtrare, per mostrarlo nella notifica
+    const removedBook = books.find((book) => book.id === bookId);
+    setBooks(books.filter((book) => book.id !== bookId));
+    if (removedBook) {
+      setNotification({
+        message: `"${removedBook.title}" rimosso dalla biblioteca`,
+        type: "warning",
+      });
+    }
+  };
+
+  // Chiude la notifica riportando lo state a null
+  const handleDismissNotification = () => {
+    setNotification(null);
+  };
 
   // Cancella cronologia — rimuove dati da localStorage e resetta state
   const handleClearHistory = () => {
@@ -83,15 +105,25 @@ const App = () => {
         <h1 className="h3 mb-0">La Mia Biblioteca Personale</h1>
       </div>
 
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onDismiss={handleDismissNotification}
+        />
+      )}
+
       <div className="card-body">
         <div className="row">
           <div className="col-md-6">
-            <InputWithLabel id="search" value={searchTerm} onInputChange={setSearchTerm}>
-              <strong><i className="bi bi-search me-1"></i>Cerca per titolo:</strong>
+            <InputWithLabel id="search" value={searchTerm} onInputChange={setSearchTerm}   isFocused>
+              <strong>
+                <i className="bi bi-search me-1"></i>
+                Cerca per titolo:</strong>
             </InputWithLabel>
           </div>
           <div className="col-md-6">
-            <InputWithLabel id="author" value={authorFilter} onInputChange={setAuthorFilter}>
+            <InputWithLabel id="author" value={authorFilter} onInputChange={setAuthorFilter} isFocused={false}>
               <strong><i className="bi bi-person me-1"></i>Filtra per autore:</strong>
             </InputWithLabel>
           </div>
@@ -100,7 +132,7 @@ const App = () => {
 
         <h4 className="mb-3">I Miei Libri</h4>
         <p className="text-muted">{getResultMessage()}</p>
-        <BookList books={filteredBooks} onMarkAsRead={handleMarkAsRead} />
+        <BookList books={filteredBooks} onMarkAsRead={handleMarkAsRead} onRemoveBook={handleRemoveBook} />
       </div>
 
       <div className="card-body border-top">

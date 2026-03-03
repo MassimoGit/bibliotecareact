@@ -1,8 +1,15 @@
 // BookItem E04: mostra dettagli di un singolo libro
-const BookItem = ({ book, onMarkAsRead }) => {
+const BookItem = ({ book, onMarkAsRead, onRemoveBook, type }) => {
+  const bsClass = "alert  d-flex alert-" + type;
+
   const handleMarkAsRead = () => {
     // chiamo la prop onMarkAsRead passando l'id del libro corrente
     onMarkAsRead(book.id);
+  };
+
+  const handleRemoveBook = () => {
+    // chiamo la prop onRemoveBook passando l'id del libro corrente
+    onRemoveBook(book.id);
   };
 
   const handleShowDetails = () => {
@@ -12,10 +19,12 @@ const BookItem = ({ book, onMarkAsRead }) => {
 
   return (
     <li className="list-group-item d-flex justify-content-between align-items-start">
-      <div>
+      <div className={bsClass}>
         <h5 className="mb-1">{book.title}</h5>
         <p className="mb-1 text-muted">Autore: {book.author}</p>
-        <small>Pagine: {book.pages} | Genere: {book.genre}</small>
+        <small>
+          Pagine: {book.pages} | Genere: {book.genre}
+        </small>
         <br />
         {/*
           className dinamico — qui succedono due cose separate:
@@ -33,25 +42,44 @@ const BookItem = ({ book, onMarkAsRead }) => {
           Poi ${...} prende quel risultato e lo incolla dopo "badge mt-1 ".
           Risultato finale: "badge mt-1 bg-success" oppure "badge mt-1 bg-warning text-dark"
         */}
-        <span className={`badge mt-1 ${book.read ? "bg-success" : "bg-warning text-dark"}`}>
+        <span
+          className={`badge mt-1 ${book.read ? "bg-success" : "bg-warning text-dark"}`}
+        >
           {/* Anche il contenuto del badge cambia con un ternario:
               - se letto: icona check + testo "Letto"
               - se non letto: icona bookmark + testo "Da leggere"
               Usiamo <> </> (Fragment) perche il ternario deve restituire UN solo elemento */}
-          {book.read
-            ? <><i className="bi bi-check-lg me-1"></i>Letto</>
-            : <><i className="bi bi-bookmark me-1"></i>Da leggere</>
-          }
+          {book.read ? (
+            <>
+              <i className="bi bi-check-lg me-1"></i>Letto
+            </>
+          ) : (
+            <>
+              <i className="bi bi-bookmark me-1"></i>Da leggere
+            </>
+          )}
         </span>
       </div>
       <div className="btn-group-vertical btn-group-sm ms-2">
         {!book.read && (
-          <button className="btn btn-outline-success" onClick={handleMarkAsRead}>
+          <button
+            className="btn btn-outline-success"
+            onClick={handleMarkAsRead}
+          >
             <i className="bi bi-check2-circle me-1"></i>Segna come Letto
           </button>
         )}
-        <button className="btn btn-outline-secondary" onClick={handleShowDetails}>
+        <button
+          className="btn btn-outline-secondary"
+          onClick={handleShowDetails}
+        >
           <i className="bi bi-info-circle me-1"></i>Mostra Dettagli
+        </button>
+        <button
+          className="btn btn-outline-danger"
+          onClick={handleRemoveBook}
+        >
+          <i className="bi bi-trash me-1"></i>Rimuovi
         </button>
       </div>
     </li>

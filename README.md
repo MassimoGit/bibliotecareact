@@ -181,3 +181,58 @@ export const books = [ ... ];
 | `bibliotecaSearch` | stringa | termine di ricerca corrente |
 | `bibliotecaShowUnread` | stringa JSON | `"true"` / `"false"` |
 | `bibliotecaReviews` | stringa JSON | array delle recensioni |
+
+---
+
+## E06 — Rimozione Libri e Componente Notification
+
+### Parte A: Rimozione di un libro (filter e Callback Drilling)
+
+In `App.jsx` è stata creata la funzione `handleRemoveBook(bookId)` che usa `.filter()` per creare un nuovo array escludendo il libro con quell'id:
+
+```jsx
+const handleRemoveBook = (bookId) => {
+  const removedBook = books.find((book) => book.id === bookId);
+  setBooks(books.filter((book) => book.id !== bookId));
+};
+```
+
+La funzione viene passata come prop `onRemoveBook` attraverso la catena **App → BookList → BookItem** (pattern detto *callback drilling*). In `BookItem` un bottone "Rimuovi" chiama `onRemoveBook(book.id)` tramite un inline handler.
+
+### Parte B: Il componente Notification con auto-dismiss
+
+È stato creato `src/components/Notification.jsx`, un componente riutilizzabile che mostra un alert Bootstrap e scompare automaticamente dopo 3 secondi.
+
+**Props:** `message`, `type` (tipo alert Bootstrap), `onDismiss` (callback).
+
+Il cuore del componente è il `useEffect` con cleanup:
+
+```jsx
+useEffect(() => {
+  const timerId = setTimeout(() => {
+    onDismiss();
+  }, 3000);
+
+  return () => {
+    clearTimeout(timerId);
+  };
+}, [onDismiss]);
+```
+
+**Perché il cleanup è fondamentale:**
+Se il componente viene smontato prima che il timer scada (es. l'utente clicca la X), il timer deve essere cancellato con `clearTimeout`. Senza cleanup, `setTimeout` continuerebbe a contare e chiamerebbe `onDismiss` su un componente che non esiste più, causando un memory leak o un warning di React. Questo è lo stesso concetto della lezione JavaScript L13: `setTimeout` restituisce un timer ID che possiamo passare a `clearTimeout` — qui applicato dentro React tramite useEffect + cleanup.
+
+### Parte C: Collegamento in App.jsx
+
+- Aggiunto lo state `notification` (inizialmente `null`)
+- `handleRemoveBook` salva il titolo del libro rimosso prima di filtrarlo, poi imposta la notifica
+- Il componente `<Notification>` viene renderizzato condizionalmente con `{notification && <Notification ... />}`
+
+### Flusso completo
+
+1. L'utente clicca "Rimuovi" su un libro
+2. `BookItem` chiama `onRemoveBook(book.id)` → risale fino a `handleRemoveBook` in `App`
+3. Il libro viene filtrato via con `.filter()` e la notifica viene impostata nello state
+4. Appare un alert giallo Bootstrap con il messaggio *"Titolo" rimosso dalla biblioteca*
+5. Dopo 3 secondi, l'alert scompare da solo (auto-dismiss via `setTimeout`)
+6. In alternativa, l'utente può cliccare la X per chiuderlo prima — il cleanup di `useEffect` cancella il timer con `clearTimeout`

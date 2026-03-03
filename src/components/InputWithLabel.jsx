@@ -1,5 +1,5 @@
 // InputWithLabel: componente generico label + input con children
-const InputWithLabel = ({ id, value, onInputChange, type = 'text', children }) => {
+const InputWithLabel = ({ id, value, onInputChange, type = 'text', children,isFocused }) => {
 
     const handleChange = (e) =>{
         //chiamo la prop onInputChange che mi viene passata come callback
@@ -15,6 +15,7 @@ const InputWithLabel = ({ id, value, onInputChange, type = 'text', children }) =
         className="form-control"
         value={value}
         onChange={handleChange}
+        autoFocus={isFocused}
       />
     </div>
   );
