@@ -1,6 +1,6 @@
 // BookItem E04: mostra dettagli di un singolo libro
-const BookItem = ({ book, onMarkAsRead, onRemoveBook, type }) => {
-  const bsClass = "alert  d-flex alert-" + type;
+const BookItem = ({ book, onMarkAsRead, onRemoveBook }) => {
+
 
   const handleMarkAsRead = () => {
     // chiamo la prop onMarkAsRead passando l'id del libro corrente
@@ -19,7 +19,7 @@ const BookItem = ({ book, onMarkAsRead, onRemoveBook, type }) => {
 
   return (
     <li className="list-group-item d-flex justify-content-between align-items-start">
-      <div className={bsClass}>
+      <div >
         <h5 className="mb-1">{book.title}</h5>
         <p className="mb-1 text-muted">Autore: {book.author}</p>
         <small>

@@ -56,7 +56,7 @@ const App = () => {
     if (removedBook) {
       setNotification({
         message: `"${removedBook.title}" rimosso dalla biblioteca`,
-        type: "warning",
+        type: "danger",
       });
     }
   };
