@@ -1,5 +1,5 @@
 // BookItem E04: mostra dettagli di un singolo libro
-const BookItem = ({ book, onMarkAsRead, onRemoveBook }) => {
+const BookItem = ({ book, onMarkAsRead, onRemoveBook, onSelectBook }) => {
 
 
   const handleMarkAsRead = () => {
@@ -13,8 +13,7 @@ const BookItem = ({ book, onMarkAsRead, onRemoveBook }) => {
   };
 
   const handleShowDetails = () => {
-    // placeholder: per ora stampa in console il titolo del libro
-    console.log("Mostra dettagli cliccato! Libro:", book.title);
+    onSelectBook(book.id);
   };
 
   return (

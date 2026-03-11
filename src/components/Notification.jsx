@@ -19,7 +19,8 @@ const Notification = ({ message, type = "info", onDismiss }) => {
    * @returns {cleanup}
    */
   const notificationEffect = () =>{
-    const timerId = setTimeout(() => {onDismiss();}, 3000);
+    const timerId = setTimeout(() => {onDismiss();}, 10000);
+    //@todo impostare a null error
     const cleanup = ()=>{ clearTimeout(timerId);}
     return cleanup
   }

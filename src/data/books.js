@@ -1,52 +1,21 @@
-export const books = [
-    { id: 1, title: "1984", author: "George Orwell", pages: 328, genre: "Distopia", read: true },
-    { id: 2, title: "Il Signore degli Anelli", author: "J.R.R. Tolkien", pages: 1178, genre: "Fantasy", read: false },
-    { id: 3, title: "Il Piccolo Principe", author: "Antoine de Saint-Exupéry", pages: 96, genre: "Favola", read: true },
-    { id: 4, title: "Fondazione", author: "Isaac Asimov", pages: 255, genre: "Fantascienza", read: false },
-    { id: 5, title: "L'Alchimista", author: "Paulo Coelho", pages: 208, genre: "Romanzo", read: false },
-    { id: 6, title: "Il Nome della Rosa", author: "Umberto Eco", pages: 512, genre: "Giallo Storico", read: true },
-    { id: 7, title: "Cronache della Galassia", author: "Isaac Asimov", pages: 288, genre: "Fantascienza", read: true },
-    { id: 8, title: "Lo Hobbit", author: "J.R.R. Tolkien", pages: 310, genre: "Fantasy", read: true },
-    { id: 9, title: "Delitto e Castigo", author: "Fëdor Dostoevskij", pages: 672, genre: "Classico", read: false },
-    { id: 10, title: "Dune", author: "Frank Herbert", pages: 704, genre: "Fantascienza", read: false },
-    { id: 11, title: "Siddharta", author: "Hermann Hesse", pages: 180, genre: "Filosofico", read: true },
-    { id: 12, title: "Neuromante", author: "William Gibson", pages: 271, genre: "Cyberpunk", read: false },
-    { id: 13, title: "Brave New World", author: "Aldous Huxley", pages: 268, genre: "Distopia", read: true },
-    { id: 14, title: "Il Processo", author: "Franz Kafka", pages: 240, genre: "Assurdismo", read: false },
-    { id: 15, title: "Il Grande Gatsby", author: "F. Scott Fitzgerald", pages: 180, genre: "Classico", read: true },
-    { id: 16, title: "Cent'anni di solitudine", author: "Gabriel García Márquez", pages: 417, genre: "Realismo Magico", read: false },
-    { id: 17, title: "Fahrenheit 451", author: "Ray Bradbury", pages: 158, genre: "Distopia", read: true },
-    { id: 18, title: "La svastica sul sole", author: "Philip K. Dick", pages: 280, genre: "Ucronia", read: false },
-    { id: 19, title: "Lo Straniero", author: "Albert Camus", pages: 123, genre: "Esistenzialismo", read: true },
-    { id: 20, title: "Il ritratto di Dorian Gray", author: "Oscar Wilde", pages: 250, genre: "Classico", read: true },
-    { id: 21, title: "Il codice Da Vinci", author: "Dan Brown", pages: 600, genre: "Thriller", read: true },
-    { id: 22, title: "Shining", author: "Stephen King", pages: 447, genre: "Horror", read: false },
-    { id: 23, title: "It", author: "Stephen King", pages: 1138, genre: "Horror", read: true },
-    { id: 24, title: "Orgoglio e pregiudizio", author: "Jane Austen", pages: 432, genre: "Romanzo Rosa", read: true },
-    { id: 25, title: "Moby Dick", author: "Herman Melville", pages: 635, genre: "Avventura", read: false },
-    { id: 26, title: "Guerra e Pace", author: "Lev Tolstoj", pages: 1225, genre: "Storico", read: false },
-    { id: 27, title: "Il Buio Oltre la Siepe", author: "Harper Lee", pages: 336, genre: "Classico", read: true },
-    { id: 28, title: "Sulla Strada", author: "Jack Kerouac", pages: 320, genre: "Beat Generation", read: false },
-    { id: 29, title: "Dracula", author: "Bram Stoker", pages: 418, genre: "Gothic", read: true },
-    { id: 30, title: "Odissea", author: "Omero", pages: 400, genre: "Poema Epico", read: true },
-    { id: 31, title: "Harry Potter e la Pietra Filosofale", author: "J.K. Rowling", pages: 309, genre: "Fantasy", read: true },
-    { id: 32, title: "Il vecchio e il mare", author: "Ernest Hemingway", pages: 127, genre: "Narrativa", read: true },
-    { id: 33, title: "Robinson Crusoe", author: "Daniel Defoe", pages: 320, genre: "Avventura", read: false },
-    { id: 34, title: "Il cacciatore di aquiloni", author: "Khaled Hosseini", pages: 368, genre: "Drammatico", read: true },
-    { id: 35, title: "La Fattoria degli Animali", author: "George Orwell", pages: 112, genre: "Satira Politica", read: true },
-    { id: 36, title: "I Fratelli Karamazov", author: "Fëdor Dostoevskij", pages: 800, genre: "Filosofico", read: false },
-    { id: 37, title: "Don Chisciotte della Mancia", author: "Miguel de Cervantes", pages: 1024, genre: "Classico", read: false },
-    { id: 38, title: "Ulisse", author: "James Joyce", pages: 730, genre: "Modernismo", read: false },
-    { id: 39, title: "La metamorfosi", author: "Franz Kafka", pages: 80, genre: "Assurdismo", read: true },
-    { id: 40, title: "Madame Bovary", author: "Gustave Flaubert", pages: 410, genre: "Realismo", read: false },
-    { id: 41, title: "Il deserto dei Tartari", author: "Dino Buzzati", pages: 250, genre: "Allegorico", read: true },
-    { id: 42, title: "I pilastri della terra", author: "Ken Follett", pages: 1000, genre: "Storico", read: false },
-    { id: 43, title: "L'ombra dello scorpione", author: "Stephen King", pages: 1200, genre: "Post-Apocalittico", read: true },
-    { id: 44, title: "Uomini e topi", author: "John Steinbeck", pages: 120, genre: "Drammatico", read: true },
-    { id: 45, title: "Anna Karenina", author: "Lev Tolstoj", pages: 864, genre: "Classico", read: false },
-    { id: 46, title: "La Divina Commedia", author: "Dante Alighieri", pages: 900, genre: "Poema", read: true },
-    { id: 47, title: "Frankenstein", author: "Mary Shelley", pages: 280, genre: "Gothic", read: true },
-    { id: 48, title: "Comma 22", author: "Joseph Heller", pages: 450, genre: "Satira", read: false },
-    { id: 49, title: "Norwegian Wood", author: "Haruki Murakami", pages: 380, genre: "Romanzo", read: true },
-    { id: 50, title: "Ready Player One", author: "Ernest Cline", pages: 384, genre: "Fantascienza", read: false }
-];
+import { API_BASE_URL, USER_ID } from '../api/config';
+
+const fetchBooks = async () => {
+    const response = await fetch(API_BASE_URL + '/books?user_id=' + USER_ID);
+    if (!response.ok) {
+        throw new Error('Errore nel caricamento dei libri: ' + response.status);
+    }
+    const data = await response.json();
+    return data;
+};
+
+const fetchBookById = async (bookId) => {
+    const response = await fetch(API_BASE_URL + '/book/' + bookId + '?user_id=' + USER_ID);
+    if (!response.ok) {
+        throw new Error('Libro non trovato: ' + response.status);
+    }
+    const data = await response.json();
+    return data;
+};
+
+export { fetchBooks, fetchBookById };
