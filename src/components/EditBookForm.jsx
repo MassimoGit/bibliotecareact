@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const EditBookForm = ({ book, onSave, onCancel }) => {
+const EditBookForm = ({ book, onSave, onCancel, isSaving }) => {
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author);
   const [pages, setPages] = useState(book.pages);
@@ -29,6 +29,7 @@ const EditBookForm = ({ book, onSave, onCancel }) => {
               className="form-control form-control-sm"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              disabled={isSaving}
             />
           </div>
           <div className="col-md-3">
@@ -39,6 +40,7 @@ const EditBookForm = ({ book, onSave, onCancel }) => {
               className="form-control form-control-sm"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
+              disabled={isSaving}
             />
           </div>
           <div className="col-md-2">
@@ -49,6 +51,7 @@ const EditBookForm = ({ book, onSave, onCancel }) => {
               className="form-control form-control-sm"
               value={pages}
               onChange={(e) => setPages(e.target.value)}
+              disabled={isSaving}
             />
           </div>
           <div className="col-md-2">
@@ -59,6 +62,7 @@ const EditBookForm = ({ book, onSave, onCancel }) => {
               className="form-control form-control-sm"
               value={genre}
               onChange={(e) => setGenre(e.target.value)}
+              disabled={isSaving}
             />
           </div>
           <div className="col-md-2">
@@ -70,15 +74,25 @@ const EditBookForm = ({ book, onSave, onCancel }) => {
                 className="form-check-input"
                 checked={read}
                 onChange={(e) => setRead(e.target.checked)}
+                disabled={isSaving}
               />
               <label htmlFor="edit-read" className="form-check-label">Letto</label>
             </div>
           </div>
         </div>
-        <button type="submit" className="btn btn-warning btn-sm me-2">
-          <i className="bi bi-check-lg me-1"></i>Salva
+        <button type="submit" className="btn btn-warning btn-sm me-2" disabled={!title.trim() || !author.trim() || !pages || !genre.trim() || isSaving}>
+          {isSaving ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+              Salvataggio...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-check-lg me-1"></i>Salva
+            </>
+          )}
         </button>
-        <button type="button" className="btn btn-secondary btn-sm" onClick={onCancel}>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={onCancel} disabled={isSaving}>
           <i className="bi bi-x-lg me-1"></i>Annulla
         </button>
       </div>

@@ -7,6 +7,7 @@ const BookItem = ({ book, onMarkAsRead, onElimina, onBookModificato, onSelectBoo
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleMarkAsRead = () => {
     onMarkAsRead(book.id);
@@ -30,12 +31,15 @@ const BookItem = ({ book, onMarkAsRead, onElimina, onBookModificato, onSelectBoo
 
   // PUT: salva le modifiche al server
   const handleSave = async (updatedData) => {
+    setIsSaving(true);
     try {
       const bookAggiornato = await updateBook(book.id, updatedData);
       onBookModificato(bookAggiornato);
       setIsEditing(false);
     } catch (errore) {
       alert('Errore: ' + errore.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -46,6 +50,7 @@ const BookItem = ({ book, onMarkAsRead, onElimina, onBookModificato, onSelectBoo
         book={book}
         onSave={handleSave}
         onCancel={() => setIsEditing(false)}
+        isSaving={isSaving}
       />
     );
   }
