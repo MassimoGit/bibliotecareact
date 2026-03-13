@@ -1,41 +1,21 @@
 import { useState } from "react";
 
 const AddBookForm = ({ onAddBook }) => {
-  const [nuovoLibro, setNuovoLibro] = useState({
-    title: '',
-    author: '',
-    pages: '',
-    genre: ''
-  });
-
-  const handleNuovoLibroChange = (event) => {
-    const { name, value } = event.target;
-    setNuovoLibro({
-      ...nuovoLibro,
-      [name]: value
-    });
-  };
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('');
+  const [pages, setPages] = useState('');
+  const [genre, setGenre] = useState('');
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!nuovoLibro.title.trim() || !nuovoLibro.author.trim()) {
-      return;
-    }
-    const libroCompleto = {
-      id: Date.now(),
-      title: nuovoLibro.title.trim(),
-      author: nuovoLibro.author.trim(),
-      pages: Number(nuovoLibro.pages),
-      genre: nuovoLibro.genre,
-      read: false
-    };
-    onAddBook(libroCompleto);
-    setNuovoLibro({
-      title: '',
-      author: '',
-      pages: '',
-      genre: ''
-    });
+    if (!title.trim() || !author.trim() || !pages || !genre.trim()) return;
+
+    onAddBook({ title, author, pages: Number(pages), genre, read: false });
+
+    setTitle('');
+    setAuthor('');
+    setPages('');
+    setGenre('');
   };
 
   return (
@@ -48,49 +28,49 @@ const AddBookForm = ({ onAddBook }) => {
           <div className="row g-2">
             <div className="col-md-3">
               <input
+                id="add-title"
                 type="text"
                 className="form-control"
                 placeholder="Titolo *"
-                name="title"
-                value={nuovoLibro.title}
-                onChange={handleNuovoLibroChange}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
               />
             </div>
             <div className="col-md-3">
               <input
+                id="add-author"
                 type="text"
                 className="form-control"
                 placeholder="Autore *"
-                name="author"
-                value={nuovoLibro.author}
-                onChange={handleNuovoLibroChange}
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
               />
             </div>
             <div className="col-md-2">
               <input
+                id="add-pages"
                 type="number"
                 className="form-control"
-                placeholder="Pagine"
-                name="pages"
-                value={nuovoLibro.pages}
-                onChange={handleNuovoLibroChange}
+                placeholder="Pagine *"
+                value={pages}
+                onChange={(e) => setPages(e.target.value)}
               />
             </div>
             <div className="col-md-2">
               <input
+                id="add-genre"
                 type="text"
                 className="form-control"
-                placeholder="Genere"
-                name="genre"
-                value={nuovoLibro.genre}
-                onChange={handleNuovoLibroChange}
+                placeholder="Genere *"
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
               />
             </div>
             <div className="col-md-2">
               <button
                 type="submit"
                 className="btn btn-success w-100"
-                disabled={!nuovoLibro.title.trim() || !nuovoLibro.author.trim()}
+                disabled={!title.trim() || !author.trim() || !pages || !genre.trim()}
               >
                 <i className="bi bi-plus-lg me-1"></i>Aggiungi
               </button>

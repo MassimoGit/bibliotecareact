@@ -8,17 +8,22 @@ import ReviewForm from "./components/ReviewForm";
 import ReviewList from "./components/ReviewList";
 import Notification from "./components/Notification";
 import AddBookForm from "./components/AddBookForm";
+import EditBookForm from "./components/EditBookForm";
 import { fetchBooks } from "./data/books";
+import { API_BASE_URL, AUTH_HEADER } from "./api/config";
 
 const App = () => {
 
-  // --- State per i libri (ora parte vuoto, verra riempito dalla "API") ---
+  // --- State per i libri ---
   const [books, setBooks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // --- State per il dettaglio libro ---
   const [selectedBookId, setSelectedBookId] = useState(null);
+
+  // --- State per la modifica libro ---
+  const [editingBook, setEditingBook] = useState(null);
 
   // --- State persistenti con useStorageState ---
   const [searchTerm, setSearchTerm] = useStorageState('bibliotecaSearch', '');
@@ -34,8 +39,9 @@ const App = () => {
     return saved.length > 0 ? saved.reduce((max, item) => Math.max(max, item.id), saved[0].id) + 1 : 1;
   });
 
-  // --- Caricamento asincrono dei libri ---
-  // Definita fuori dal useEffect per poterla riutilizzare nel bottone "Riprova"
+  const [notification, setNotification] = useState(null);
+
+  // --- Caricamento asincrono dei libri (GET) ---
   const caricaLibri = async () => {
     setIsLoading(true);
     setError(null);
@@ -50,12 +56,123 @@ const App = () => {
     }
   };
 
-  // Al mount del componente, carica i libri
   useEffect(() => {
     caricaLibri();
   }, []);
 
-  // --- Handlers ---
+  // --- POST: Aggiungere un libro ---
+  const handleAddBook = async (newBookData) => {
+    try {
+      const response = await fetch(API_BASE_URL + '/books', {
+        method: 'POST',
+        headers: AUTH_HEADER,
+        body: JSON.stringify(newBookData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Errore nella creazione del libro: ' + response.status);
+      }
+
+      const createdBook = await response.json();
+      setBooks([...books, createdBook]);
+      setNotification({
+        message: '"' + createdBook.title + '" aggiunto!',
+        type: "success",
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // --- PUT: Modificare un libro ---
+  const handleUpdateBook = async (updatedData) => {
+    try {
+      const response = await fetch(
+        API_BASE_URL + '/books/' + editingBook.id,
+        {
+          method: 'PUT',
+          headers: AUTH_HEADER,
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Errore nella modifica del libro: ' + response.status);
+      }
+
+      const updatedBook = await response.json();
+
+      setBooks(
+        books.map((book) =>
+          book.id === updatedBook.id ? updatedBook : book
+        )
+      );
+
+      setEditingBook(null);
+      setNotification({
+        message: '"' + updatedBook.title + '" modificato!',
+        type: "info",
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // --- DELETE: Cancellare un libro ---
+  const handleDeleteBook = async (bookId) => {
+    try {
+      const response = await fetch(
+        API_BASE_URL + '/books/' + bookId,
+        {
+          method: 'DELETE',
+          headers: AUTH_HEADER,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Errore nella cancellazione: ' + response.status);
+      }
+
+      const deletedBook = books.find((b) => b.id === bookId);
+      setBooks(books.filter((book) => book.id !== bookId));
+      if (deletedBook) {
+        setNotification({
+          message: '"' + deletedBook.title + '" eliminato!',
+          type: "danger",
+        });
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // --- PUT: Segnare come letto ---
+  const handleMarkAsRead = async (bookId) => {
+    const book = books.find((b) => b.id === bookId);
+    if (!book) return;
+
+    try {
+      const response = await fetch(
+        API_BASE_URL + '/books/' + bookId,
+        {
+          method: 'PUT',
+          headers: AUTH_HEADER,
+          body: JSON.stringify({ ...book, read: true }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Errore nel segnare come letto: ' + response.status);
+      }
+
+      const updatedBook = await response.json();
+      setBooks(books.map((b) => (b.id === updatedBook.id ? updatedBook : b)));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // --- Handlers vari ---
   const handleAddReview = ({ bookTitle, reviewText }) => {
     const newReview = {
       id: nextId,
@@ -65,19 +182,6 @@ const App = () => {
     };
     setReviews([...reviews, newReview]);
     setNextId(nextId + 1);
-  };
-
-  const [notification, setNotification] = useState(null);
-
-  const handleRemoveBook = (bookId) => {
-    const removedBook = books.find((book) => book.id === bookId);
-    setBooks(books.filter((book) => book.id !== bookId));
-    if (removedBook) {
-      setNotification({
-        message: `"${removedBook.title}" rimosso dalla biblioteca`,
-        type: "danger",
-      });
-    }
   };
 
   const handleDismissNotification = () => {
@@ -96,26 +200,12 @@ const App = () => {
     setNextId(1);
   };
 
-  const handleMarkAsRead = (id) => {
-    setBooks(
-        books.map((book) => (book.id === id ? { ...book, read: true } : book)),
-    );
-  };
-
   const handleSelectBook = (bookId) => {
     setSelectedBookId(bookId);
   };
 
   const handleCloseDetail = () => {
     setSelectedBookId(null);
-  };
-
-  const handleAddBook = (libroCompleto) => {
-    setBooks([libroCompleto, ...books]);
-    setNotification({
-      message: '"' + libroCompleto.title + '" aggiunto!',
-      type: "success",
-    });
   };
 
   // --- Filtraggio ---
@@ -148,12 +238,12 @@ const App = () => {
 
         {error && (
             <div className="alert alert-danger d-flex align-items-center justify-content-between m-3" role="alert">
-              <span>Errore durante il caricamento: {error}</span>
+              <span>Errore: {error}</span>
               <button
                   className="btn btn-outline-danger btn-sm"
-                  onClick={caricaLibri}
+                  onClick={() => setError(null)}
               >
-                <i className="bi bi-arrow-clockwise me-1"></i>Riprova
+                <i className="bi bi-x-lg me-1"></i>Chiudi
               </button>
             </div>
         )}
@@ -186,6 +276,14 @@ const App = () => {
 
                 <AddBookForm onAddBook={handleAddBook} />
 
+                {editingBook && (
+                    <EditBookForm
+                        book={editingBook}
+                        onSave={handleUpdateBook}
+                        onCancel={() => setEditingBook(null)}
+                    />
+                )}
+
                 <h4 className="mb-3">I Miei Libri</h4>
                 <p className="text-muted">{getResultMessage()}</p>
 
@@ -199,7 +297,8 @@ const App = () => {
                 <BookList
                     books={filteredBooks}
                     onMarkAsRead={handleMarkAsRead}
-                    onRemoveBook={handleRemoveBook}
+                    onDeleteBook={handleDeleteBook}
+                    onEditBook={setEditingBook}
                     onSelectBook={handleSelectBook}
                 />
               </div>

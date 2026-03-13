@@ -1,10 +1,17 @@
 import BookItem from "./BookItem.jsx";
 
-// BookList E04: renderizza la lista dei libri
-const BookList = ({ books, onMarkAsRead, onRemoveBook, onSelectBook }) => (
+// BookList 09b: passa onDeleteBook, onEditBook ai figli
+const BookList = ({ books, onMarkAsRead, onDeleteBook, onEditBook, onSelectBook }) => (
   <ul className="list-group">
     {books.map((book) => (
-      <BookItem key={book.id} book={book} onMarkAsRead={onMarkAsRead} onRemoveBook={onRemoveBook} onSelectBook={onSelectBook} />
+      <BookItem
+        key={book.id}
+        book={book}
+        onMarkAsRead={onMarkAsRead}
+        onDeleteBook={onDeleteBook}
+        onEditBook={onEditBook}
+        onSelectBook={onSelectBook}
+      />
     ))}
   </ul>
 );
