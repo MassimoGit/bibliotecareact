@@ -1,15 +1,15 @@
 import BookItem from "./BookItem.jsx";
 
-// BookList 09b: passa onDeleteBook, onEditBook ai figli
-const BookList = ({ books, onMarkAsRead, onDeleteBook, onEditBook, onSelectBook }) => (
+// BookList 09c: passa onElimina e onBookModificato ai figli
+const BookList = ({ books, onMarkAsRead, onElimina, onBookModificato, onSelectBook }) => (
   <ul className="list-group">
     {books.map((book) => (
       <BookItem
         key={book.id}
         book={book}
         onMarkAsRead={onMarkAsRead}
-        onDeleteBook={onDeleteBook}
-        onEditBook={onEditBook}
+        onElimina={onElimina}
+        onBookModificato={onBookModificato}
         onSelectBook={onSelectBook}
       />
     ))}

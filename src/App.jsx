@@ -8,9 +8,7 @@ import ReviewForm from "./components/ReviewForm";
 import ReviewList from "./components/ReviewList";
 import Notification from "./components/Notification";
 import AddBookForm from "./components/AddBookForm";
-import EditBookForm from "./components/EditBookForm";
-import { fetchBooks } from "./data/books";
-import { API_BASE_URL, AUTH_HEADER } from "./api/config";
+import { fetchBooks, createBook, toggleBookRead } from "./data/books";
 
 const App = () => {
 
@@ -22,8 +20,8 @@ const App = () => {
   // --- State per il dettaglio libro ---
   const [selectedBookId, setSelectedBookId] = useState(null);
 
-  // --- State per la modifica libro ---
-  const [editingBook, setEditingBook] = useState(null);
+  // --- State per l'invio del form ---
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- State persistenti con useStorageState ---
   const [searchTerm, setSearchTerm] = useStorageState('bibliotecaSearch', '');
@@ -41,13 +39,13 @@ const App = () => {
 
   const [notification, setNotification] = useState(null);
 
-  // --- Caricamento asincrono dei libri (GET) ---
-  const caricaLibri = async () => {
+  // --- Caricamento asincrono dei libri (GET con ricerca server-side) ---
+  const caricaLibri = async (search = '') => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const libriCaricati = await fetchBooks();
+      const libriCaricati = await fetchBooks(search);
       setBooks(libriCaricati);
     } catch (err) {
       setError(err.message);
@@ -60,112 +58,55 @@ const App = () => {
     caricaLibri();
   }, []);
 
+  // --- Ricerca server-side: submit del form ---
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    caricaLibri(searchTerm);
+  };
+
   // --- POST: Aggiungere un libro ---
   const handleAddBook = async (newBookData) => {
+    setIsSubmitting(true);
+
     try {
-      const response = await fetch(API_BASE_URL + '/books', {
-        method: 'POST',
-        headers: AUTH_HEADER,
-        body: JSON.stringify(newBookData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Errore nella creazione del libro: ' + response.status);
-      }
-
-      const createdBook = await response.json();
-      setBooks([...books, createdBook]);
+      const createdBook = await createBook(newBookData);
+      setBooks([createdBook, ...books]);
       setNotification({
         message: '"' + createdBook.title + '" aggiunto!',
         type: "success",
       });
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // --- PUT: Modificare un libro ---
-  const handleUpdateBook = async (updatedData) => {
-    try {
-      const response = await fetch(
-        API_BASE_URL + '/books/' + editingBook.id,
-        {
-          method: 'PUT',
-          headers: AUTH_HEADER,
-          body: JSON.stringify(updatedData),
-        }
-      );
+  // --- Callback per BookItem: aggiorna libro dopo modifica PUT ---
+  const handleBookModificato = (bookAggiornato) => {
+    setBooks(
+      books.map((b) =>
+        b.id === bookAggiornato.id ? bookAggiornato : b
+      )
+    );
+  };
 
-      if (!response.ok) {
-        throw new Error('Errore nella modifica del libro: ' + response.status);
-      }
-
-      const updatedBook = await response.json();
-
-      setBooks(
-        books.map((book) =>
-          book.id === updatedBook.id ? updatedBook : book
-        )
-      );
-
-      setEditingBook(null);
+  // --- Callback per BookItem: rimuovi libro dopo DELETE ---
+  const handleEliminaBook = (bookId) => {
+    const deletedBook = books.find((b) => b.id === bookId);
+    setBooks(books.filter((b) => b.id !== bookId));
+    if (deletedBook) {
       setNotification({
-        message: '"' + updatedBook.title + '" modificato!',
-        type: "info",
+        message: '"' + deletedBook.title + '" eliminato!',
+        type: "danger",
       });
-    } catch (err) {
-      setError(err.message);
     }
   };
 
-  // --- DELETE: Cancellare un libro ---
-  const handleDeleteBook = async (bookId) => {
-    try {
-      const response = await fetch(
-        API_BASE_URL + '/books/' + bookId,
-        {
-          method: 'DELETE',
-          headers: AUTH_HEADER,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Errore nella cancellazione: ' + response.status);
-      }
-
-      const deletedBook = books.find((b) => b.id === bookId);
-      setBooks(books.filter((book) => book.id !== bookId));
-      if (deletedBook) {
-        setNotification({
-          message: '"' + deletedBook.title + '" eliminato!',
-          type: "danger",
-        });
-      }
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // --- PUT: Segnare come letto ---
+  // --- PATCH: Segnare come letto ---
   const handleMarkAsRead = async (bookId) => {
-    const book = books.find((b) => b.id === bookId);
-    if (!book) return;
-
     try {
-      const response = await fetch(
-        API_BASE_URL + '/books/' + bookId,
-        {
-          method: 'PUT',
-          headers: AUTH_HEADER,
-          body: JSON.stringify({ ...book, read: true }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Errore nel segnare come letto: ' + response.status);
-      }
-
-      const updatedBook = await response.json();
+      const updatedBook = await toggleBookRead(bookId, true);
       setBooks(books.map((b) => (b.id === updatedBook.id ? updatedBook : b)));
     } catch (err) {
       setError(err.message);
@@ -208,9 +149,8 @@ const App = () => {
     setSelectedBookId(null);
   };
 
-  // --- Filtraggio ---
+  // --- Filtraggio client-side (autore e non letti; il titolo è filtrato dal server) ---
   const filteredBooks = books
-      .filter((book) => book.title.toLowerCase().includes(searchTerm.toLowerCase()))
       .filter((book) => book.author.toLowerCase().includes(authorFilter.toLowerCase()))
       .filter((book) => (showOnlyUnread ? !book.read : true));
 
@@ -258,14 +198,32 @@ const App = () => {
         ) : (
             <>
               <div className="card-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <InputWithLabel id="search" value={searchTerm} onInputChange={setSearchTerm} isFocused>
-                      <strong>
-                        <i className="bi bi-search me-1"></i>
-                        Cerca per titolo:</strong>
-                    </InputWithLabel>
+                <form onSubmit={handleSearchSubmit} className="mb-3">
+                  <div className="row align-items-end">
+                    <div className="col-md-8">
+                      <InputWithLabel id="search" value={searchTerm} onInputChange={setSearchTerm} isFocused>
+                        <strong>
+                          <i className="bi bi-search me-1"></i>
+                          Cerca per titolo:</strong>
+                      </InputWithLabel>
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <button type="submit" className="btn btn-primary w-100" disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                            Cerco...
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-search me-1"></i>Cerca
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
+                </form>
+                <div className="row">
                   <div className="col-md-6">
                     <InputWithLabel id="author" value={authorFilter} onInputChange={setAuthorFilter} isFocused={false}>
                       <strong><i className="bi bi-person me-1"></i>Filtra per autore:</strong>
@@ -274,15 +232,7 @@ const App = () => {
                 </div>
                 <UnreadFilter checked={showOnlyUnread} onChange={setShowOnlyUnread} />
 
-                <AddBookForm onAddBook={handleAddBook} />
-
-                {editingBook && (
-                    <EditBookForm
-                        book={editingBook}
-                        onSave={handleUpdateBook}
-                        onCancel={() => setEditingBook(null)}
-                    />
-                )}
+                <AddBookForm onAddBook={handleAddBook} isSubmitting={isSubmitting} />
 
                 <h4 className="mb-3">I Miei Libri</h4>
                 <p className="text-muted">{getResultMessage()}</p>
@@ -297,8 +247,8 @@ const App = () => {
                 <BookList
                     books={filteredBooks}
                     onMarkAsRead={handleMarkAsRead}
-                    onDeleteBook={handleDeleteBook}
-                    onEditBook={setEditingBook}
+                    onElimina={handleEliminaBook}
+                    onBookModificato={handleBookModificato}
                     onSelectBook={handleSelectBook}
                 />
               </div>

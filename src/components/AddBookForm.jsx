@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const AddBookForm = ({ onAddBook }) => {
+const AddBookForm = ({ onAddBook, isSubmitting }) => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [pages, setPages] = useState('');
@@ -34,6 +34,7 @@ const AddBookForm = ({ onAddBook }) => {
                 placeholder="Titolo *"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <div className="col-md-3">
@@ -44,6 +45,7 @@ const AddBookForm = ({ onAddBook }) => {
                 placeholder="Autore *"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <div className="col-md-2">
@@ -54,6 +56,7 @@ const AddBookForm = ({ onAddBook }) => {
                 placeholder="Pagine *"
                 value={pages}
                 onChange={(e) => setPages(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <div className="col-md-2">
@@ -64,15 +67,25 @@ const AddBookForm = ({ onAddBook }) => {
                 placeholder="Genere *"
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
             <div className="col-md-2">
               <button
                 type="submit"
                 className="btn btn-success w-100"
-                disabled={!title.trim() || !author.trim() || !pages || !genre.trim()}
+                disabled={!title.trim() || !author.trim() || !pages || !genre.trim() || isSubmitting}
               >
-                <i className="bi bi-plus-lg me-1"></i>Aggiungi
+                {isSubmitting ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                    Invio in corso...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-plus-lg me-1"></i>Aggiungi
+                  </>
+                )}
               </button>
             </div>
           </div>
