@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import useStorageState from "./hooks/useStorageState";
+import useBooks from "./hooks/useBooks";
+import useNotification from "./hooks/useNotification";
 import InputWithLabel from "./components/InputWithLabel";
 import UnreadFilter from "./components/UnreadFilter";
 import BookList from "./components/BookList";
@@ -8,26 +10,27 @@ import ReviewForm from "./components/ReviewForm";
 import ReviewList from "./components/ReviewList";
 import Notification from "./components/Notification";
 import AddBookForm from "./components/AddBookForm";
-import { fetchBooks, createBook, toggleBookRead } from "./data/books";
 
 const App = () => {
 
-  // --- State per i libri ---
-  const [books, setBooks] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // --- Custom hook: stato e logica libri (useReducer interno) ---
+  const {
+    books, isLoading, error, isSubmitting,
+    caricaLibri, handleAddBook, handleBookModificato,
+    handleEliminaBook, handleMarkAsRead, clearError,
+  } = useBooks();
 
-  // --- State per il dettaglio libro ---
-  const [selectedBookId, setSelectedBookId] = useState(null);
-
-  // --- State per l'invio del form ---
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // --- Custom hook: notifiche ---
+  const { notification, showNotification, dismissNotification } = useNotification();
 
   // --- State persistenti con useStorageState ---
   const [searchTerm, setSearchTerm] = useStorageState('bibliotecaSearch', '');
   const [authorFilter, setAuthorFilter] = useStorageState('bibliotecaAuthor', '');
   const [showOnlyUnread, setShowOnlyUnread] = useStorageState('bibliotecaShowUnread', false);
   const [reviews, setReviews] = useStorageState('bibliotecaReviews', []);
+
+  // --- State per il dettaglio libro ---
+  const [selectedBookId, setSelectedBookId] = useState(null);
 
   // nextId per le recensioni
   const [nextId, setNextId] = useState(() => {
@@ -37,79 +40,25 @@ const App = () => {
     return saved.length > 0 ? saved.reduce((max, item) => Math.max(max, item.id), saved[0].id) + 1 : 1;
   });
 
-  const [notification, setNotification] = useState(null);
-
-  // --- Caricamento asincrono dei libri (GET con ricerca server-side) ---
-  const caricaLibri = async (search = '') => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const libriCaricati = await fetchBooks(search);
-      setBooks(libriCaricati);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    caricaLibri();
-  }, []);
-
   // --- Ricerca server-side: submit del form ---
   const handleSearchSubmit = (event) => {
     event.preventDefault();
     caricaLibri(searchTerm);
   };
 
-  // --- POST: Aggiungere un libro ---
-  const handleAddBook = async (newBookData) => {
-    setIsSubmitting(true);
-
-    try {
-      const createdBook = await createBook(newBookData);
-      setBooks([createdBook, ...books]);
-      setNotification({
-        message: '"' + createdBook.title + '" aggiunto!',
-        type: "success",
-      });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsSubmitting(false);
+  // --- Wrapper: aggiunta libro + notifica ---
+  const onAddBook = async (newBookData) => {
+    const createdBook = await handleAddBook(newBookData);
+    if (createdBook) {
+      showNotification('"' + createdBook.title + '" aggiunto!', 'success');
     }
   };
 
-  // --- Callback per BookItem: aggiorna libro dopo modifica PUT ---
-  const handleBookModificato = (bookAggiornato) => {
-    setBooks(
-      books.map((b) =>
-        b.id === bookAggiornato.id ? bookAggiornato : b
-      )
-    );
-  };
-
-  // --- Callback per BookItem: rimuovi libro dopo DELETE ---
-  const handleEliminaBook = (bookId) => {
-    const deletedBook = books.find((b) => b.id === bookId);
-    setBooks(books.filter((b) => b.id !== bookId));
+  // --- Wrapper: eliminazione libro + notifica ---
+  const onEliminaBook = (bookId) => {
+    const deletedBook = handleEliminaBook(bookId);
     if (deletedBook) {
-      setNotification({
-        message: '"' + deletedBook.title + '" eliminato!',
-        type: "danger",
-      });
-    }
-  };
-
-  // --- PATCH: Segnare come letto ---
-  const handleMarkAsRead = async (bookId) => {
-    try {
-      const updatedBook = await toggleBookRead(bookId, true);
-      setBooks(books.map((b) => (b.id === updatedBook.id ? updatedBook : b)));
-    } catch (err) {
-      setError(err.message);
+      showNotification('"' + deletedBook.title + '" eliminato!', 'danger');
     }
   };
 
@@ -125,10 +74,6 @@ const App = () => {
     setNextId(nextId + 1);
   };
 
-  const handleDismissNotification = () => {
-    setNotification(null);
-  };
-
   const handleClearHistory = () => {
     localStorage.removeItem("bibliotecaSearch");
     localStorage.removeItem("bibliotecaAuthor");
@@ -139,14 +84,6 @@ const App = () => {
     setShowOnlyUnread(false);
     setReviews([]);
     setNextId(1);
-  };
-
-  const handleSelectBook = (bookId) => {
-    setSelectedBookId(bookId);
-  };
-
-  const handleCloseDetail = () => {
-    setSelectedBookId(null);
   };
 
   // --- Filtraggio client-side (autore e non letti; il titolo è filtrato dal server) ---
@@ -172,7 +109,7 @@ const App = () => {
             <Notification
                 message={notification.message}
                 type={notification.type}
-                onDismiss={handleDismissNotification}
+                onDismiss={dismissNotification}
             />
         )}
 
@@ -181,7 +118,7 @@ const App = () => {
               <span>Errore: {error}</span>
               <button
                   className="btn btn-outline-danger btn-sm"
-                  onClick={() => setError(null)}
+                  onClick={clearError}
               >
                 <i className="bi bi-x-lg me-1"></i>Chiudi
               </button>
@@ -232,7 +169,7 @@ const App = () => {
                 </div>
                 <UnreadFilter checked={showOnlyUnread} onChange={setShowOnlyUnread} />
 
-                <AddBookForm onAddBook={handleAddBook} isSubmitting={isSubmitting} />
+                <AddBookForm onAddBook={onAddBook} isSubmitting={isSubmitting} />
 
                 <h4 className="mb-3">I Miei Libri</h4>
                 <p className="text-muted">{getResultMessage()}</p>
@@ -240,16 +177,16 @@ const App = () => {
                 {selectedBookId && (
                     <BookDetail
                         bookId={selectedBookId}
-                        onClose={handleCloseDetail}
+                        onClose={() => setSelectedBookId(null)}
                     />
                 )}
 
                 <BookList
                     books={filteredBooks}
                     onMarkAsRead={handleMarkAsRead}
-                    onElimina={handleEliminaBook}
+                    onElimina={onEliminaBook}
                     onBookModificato={handleBookModificato}
-                    onSelectBook={handleSelectBook}
+                    onSelectBook={(bookId) => setSelectedBookId(bookId)}
                 />
               </div>
 
