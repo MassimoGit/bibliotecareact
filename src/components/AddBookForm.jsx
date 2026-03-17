@@ -6,9 +6,11 @@ const AddBookForm = ({ onAddBook, isSubmitting }) => {
   const [pages, setPages] = useState('');
   const [genre, setGenre] = useState('');
 
+  const isFormInvalid = !title.trim() || !author.trim() || !pages || !genre.trim();
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!title.trim() || !author.trim() || !pages || !genre.trim()) return;
+    if (isFormInvalid) return;
 
     onAddBook({ title, author, pages: Number(pages), genre, read: false });
 
@@ -74,7 +76,7 @@ const AddBookForm = ({ onAddBook, isSubmitting }) => {
               <button
                 type="submit"
                 className="btn btn-success w-100"
-                disabled={!title.trim() || !author.trim() || !pages || !genre.trim() || isSubmitting}
+                disabled={isFormInvalid || isSubmitting}
               >
                 {isSubmitting ? (
                   <>

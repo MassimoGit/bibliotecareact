@@ -2,6 +2,7 @@ import { useState } from "react";
 import useStorageState from "./hooks/useStorageState";
 import useBooks from "./hooks/useBooks";
 import useNotification from "./hooks/useNotification";
+import useReviews from "./hooks/useReviews";
 import InputWithLabel from "./components/InputWithLabel";
 import UnreadFilter from "./components/UnreadFilter";
 import BookList from "./components/BookList";
@@ -23,22 +24,16 @@ const App = () => {
   // --- Custom hook: notifiche ---
   const { notification, showNotification, dismissNotification } = useNotification();
 
+  // --- Custom hook: recensioni ---
+  const { reviews, handleAddReview, handleClearReviews } = useReviews();
+
   // --- State persistenti con useStorageState ---
   const [searchTerm, setSearchTerm] = useStorageState('bibliotecaSearch', '');
   const [authorFilter, setAuthorFilter] = useStorageState('bibliotecaAuthor', '');
   const [showOnlyUnread, setShowOnlyUnread] = useStorageState('bibliotecaShowUnread', false);
-  const [reviews, setReviews] = useStorageState('bibliotecaReviews', []);
 
   // --- State per il dettaglio libro ---
   const [selectedBookId, setSelectedBookId] = useState(null);
-
-  // nextId per le recensioni
-  const [nextId, setNextId] = useState(() => {
-    const saved = JSON.parse(
-        localStorage.getItem("bibliotecaReviews") || "[]",
-    );
-    return saved.length > 0 ? saved.reduce((max, item) => Math.max(max, item.id), saved[0].id) + 1 : 1;
-  });
 
   // --- Ricerca server-side: submit del form ---
   const handleSearchSubmit = (event) => {
@@ -62,28 +57,15 @@ const App = () => {
     }
   };
 
-  // --- Handlers vari ---
-  const handleAddReview = ({ bookTitle, reviewText }) => {
-    const newReview = {
-      id: nextId,
-      bookTitle,
-      reviewText,
-      timestamp: new Date().toLocaleString(),
-    };
-    setReviews([...reviews, newReview]);
-    setNextId(nextId + 1);
-  };
-
+  // --- Cancella cronologia filtri + recensioni ---
   const handleClearHistory = () => {
     localStorage.removeItem("bibliotecaSearch");
     localStorage.removeItem("bibliotecaAuthor");
     localStorage.removeItem("bibliotecaShowUnread");
-    localStorage.removeItem("bibliotecaReviews");
     setSearchTerm("");
     setAuthorFilter("");
     setShowOnlyUnread(false);
-    setReviews([]);
-    setNextId(1);
+    handleClearReviews();
   };
 
   // --- Filtraggio client-side (autore e non letti; il titolo è filtrato dal server) ---
